@@ -137,13 +137,10 @@ private[redshift] object Utils {
           // Note: this only checks that there is an active rule which matches the temp directory;
           // it does not actually check that the rule will delete the files. This check is still
           // better than nothing, though, and we can always improve it later.
-          rule.getStatus == {
-             BucketLifecycleConfiguration.ENABLED && 
-             Option(rule.getPrefix).isDefined && 
+          rule.getStatus == BucketLifecycleConfiguration.ENABLED &&
+             Option(rule.getPrefix).isDefined &&
              key.startsWith(rule.getPrefix)
-           }
         }
-      }
       if (!hasMatchingBucketLifecycleRule) {
         log.warn(s"The S3 bucket $bucket does not have an object lifecycle configuration to " +
           "ensure cleanup of temporary files. Consider configuring `tempdir` to point to a " +
