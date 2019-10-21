@@ -129,18 +129,21 @@ private[redshift] object Utils {
       val bucket = s3URI.getBucket
       assert(bucket != null, "Could not get bucket from S3 URI")
       val key = Option(s3URI.getKey).getOrElse("")
-      val hasMatchingBucketLifecycleRule: Boolean = {
+      val hasMatchingBucketLifecycleRule: Boolean =
+      {
         val rules = Option(s3Client.getBucketLifecycleConfiguration(bucket))
-          .map(_.getRules.asScala)
-          .getOrElse(Seq.empty)
-        rules.exists { rule =>
+            .map(_.getRules.asScala)
+            .getOrElse(Seq.empty)
+        rules.exists
+        { rule =>
           // Note: this only checks that there is an active rule which matches the temp directory;
           // it does not actually check that the rule will delete the files. This check is still
           // better than nothing, though, and we can always improve it later.
           rule.getStatus == BucketLifecycleConfiguration.ENABLED &&
-             Option(rule.getPrefix).isDefined &&
-             key.startsWith(rule.getPrefix)
+              Option(rule.getPrefix).isDefined &&
+              key.startsWith(rule.getPrefix)
         }
+      }
       if (!hasMatchingBucketLifecycleRule) {
         log.warn(s"The S3 bucket $bucket does not have an object lifecycle configuration to " +
           "ensure cleanup of temporary files. Consider configuring `tempdir` to point to a " +
